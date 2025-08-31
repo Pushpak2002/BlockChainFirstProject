@@ -6,22 +6,51 @@
 </head>
 <body>
   <button id="connectButton">Connect MetaMask</button>
+  <button id="balanceButton">Check Balance</button>
   <p id="status"></p>
+  <p id="balance"></p>
 
   <script>
     const connectButton = document.getElementById('connectButton');
+    const balanceButton = document.getElementById('balanceButton');
     const status = document.getElementById('status');
+    const balance = document.getElementById('balance');
+    let currentAccount = null;
 
+    // Connect MetaMask
     connectButton.onclick = async () => {
       if (typeof window.ethereum !== 'undefined') {
         try {
           const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          status.textContent = 'Connected: ' + accounts[0];
+          currentAccount = accounts[0]; 
+          console.log('Connected account info:', accounts);
+          status.textContent = 'Connected: ' + currentAccount;
+          connectButton.innerHTML = 'Connected';
         } catch (error) {
           status.textContent = 'Connection rejected.';
         }
       } else {
         status.textContent = 'MetaMask is not installed. Please install MetaMask and try again.';
+      }
+    };
+
+    // Check balance
+    balanceButton.onclick = async () => {
+      if (typeof window.ethereum !== 'undefined' && currentAccount) {
+        try {
+          const balanceWei = await window.ethereum.request({
+            method: 'eth_getBalance',
+            params: [currentAccount, 'latest']
+          });
+          // Convert Wei (hex) to Ether
+          const balanceEth = parseInt(balanceWei, 16) / 1e18;
+          balance.textContent = 'Balance: ' + balanceEth.toFixed(4) + ' ETH';
+        } catch (error) {
+          balance.textContent = 'Could not fetch balance.';
+          console.error(error);
+        }
+      } else {
+        balance.textContent = 'Not connected to MetaMask.';
       }
     };
   </script>
